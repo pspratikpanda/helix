@@ -107,3 +107,74 @@
   opacity: 1;
   transform: translateY(0) scale(1);
 }
+
+/* Water Wave Text Gradient Animation */
+@keyframes waveText {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.text-wave-gradient {
+  background: linear-gradient(
+    -45deg,
+    #e7c07d 0%,    /* light gold */
+    #b48252 25%,   /* bronze */
+    #3a99a0 50%,   /* Baltic teal */
+    #6fb4af 75%,   /* soft seafoam */
+    #e7c07d 100%
+  );
+  background-size: 400% 400%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: waveText 8s ease infinite;
+}
+
+/* Ship/Logo Bobbing on Waves Animation */
+@keyframes bobbing {
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-12px) rotate(1deg);
+  }
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+}
+
+.float-bob {
+  animation: bobbing 6s ease-in-out infinite;
+}
+
+/* Button Wave Transition effect */
+.btn-wave-hover {
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.btn-wave-hover::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease-out, height 0.6s ease-out;
+  z-index: -1;
+}
+
+.btn-wave-hover:hover::before {
+  width: 350px;
+  height: 350px;
+}

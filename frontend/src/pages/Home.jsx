@@ -128,11 +128,11 @@ const Home = () => {
           <img
             src={logoImg}
             alt="HELIX Logo"
-            className="w-[180px] md:w-[220px] lg:w-[280px] aspect-square object-contain animate-spin-slow filter drop-shadow-[0_0_15px_rgba(231,192,125,0.4)]"
+            className="w-[180px] md:w-[220px] lg:w-[280px] aspect-square object-contain float-bob filter drop-shadow-[0_0_15px_rgba(231,192,125,0.4)]"
           />
 
           {/* Heading */}
-          <h1 className="font-heading text-4xl md:text-6xl lg:text-7xl font-black text-gold tracking-widest leading-none">
+          <h1 className="font-heading text-4xl md:text-6xl lg:text-7xl font-black text-gold tracking-widest leading-none text-wave-gradient">
             HELIX 2026
           </h1>
 
@@ -150,14 +150,14 @@ const Home = () => {
           <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto pt-4">
             <Link
               to="/register"
-              className="flex items-center justify-center gap-2 w-full sm:w-56 min-h-[48px] bg-gradient-to-r from-baltic to-bronze text-white font-heading font-bold text-sm tracking-widest rounded-lg shadow-lg hover:shadow-baltic/30 hover:scale-105 transform transition-all duration-300 uppercase"
+              className="btn-wave-hover flex items-center justify-center gap-2 w-full sm:w-56 min-h-[48px] bg-gradient-to-r from-baltic to-bronze text-white font-heading font-bold text-sm tracking-widest rounded-lg shadow-lg hover:shadow-baltic/30 hover:scale-105 transform transition-all duration-300 uppercase"
             >
               <Anchor className="w-4 h-4" />
               Set Sail
             </Link>
             <Link
               to="/events"
-              className="flex items-center justify-center gap-2 w-full sm:w-56 min-h-[48px] border-2 border-gold text-gold hover:text-navy hover:bg-gold font-heading font-bold text-sm tracking-widest rounded-lg transition-all duration-300 uppercase"
+              className="btn-wave-hover flex items-center justify-center gap-2 w-full sm:w-56 min-h-[48px] border-2 border-gold text-gold hover:text-navy hover:bg-gold font-heading font-bold text-sm tracking-widest rounded-lg transition-all duration-300 uppercase"
             >
               <Compass className="w-4 h-4" />
               The Map

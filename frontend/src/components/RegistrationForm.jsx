@@ -31,6 +31,14 @@ const RegistrationForm = ({ events = [], onSubmit, isSubmitting = false }) => {
     }
   };
 
+  // Calculate dynamic total price of selected fests
+  const calculateTotal = () => {
+    return formData.eventsSelected.reduce((sum, eventId) => {
+      const event = events.find((e) => e._id === eventId);
+      return sum + (event?.registrationFee || 0);
+    }, 0);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     const { name, email, phone, college, city, eventsSelected } = formData;
@@ -55,21 +63,21 @@ const RegistrationForm = ({ events = [], onSubmit, isSubmitting = false }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="flex flex-col gap-2">
           <label className="text-xs uppercase font-semibold text-gold tracking-widest">
-            Navigator's Name
+            Full Name
           </label>
           <input
             type="text"
             name="name"
             value={formData.name}
             onChange={handleChange}
-            placeholder="e.g. Jack Sparrow"
+            placeholder="e.g. John Doe"
             className="w-full bg-navy border border-gold/30 focus:border-gold rounded-lg px-4 py-3 text-white text-base min-h-[48px] focus:outline-none transition-colors"
             required
           />
         </div>
         <div className="flex flex-col gap-2">
           <label className="text-xs uppercase font-semibold text-gold tracking-widest">
-            Contact Number
+            Phone Number
           </label>
           <input
             type="tel"
@@ -87,21 +95,21 @@ const RegistrationForm = ({ events = [], onSubmit, isSubmitting = false }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="flex flex-col gap-2">
           <label className="text-xs uppercase font-semibold text-gold tracking-widest">
-            Email Coordinates
+            Email Address
           </label>
           <input
             type="email"
             name="email"
             value={formData.email}
             onChange={handleChange}
-            placeholder="e.g. jack@blackpearl.com"
+            placeholder="e.g. john@example.com"
             className="w-full bg-navy border border-gold/30 focus:border-gold rounded-lg px-4 py-3 text-white text-base min-h-[48px] focus:outline-none transition-colors"
             required
           />
         </div>
         <div className="flex flex-col gap-2">
           <label className="text-xs uppercase font-semibold text-gold tracking-widest">
-            Academy / College
+            College / University
           </label>
           <input
             type="text"
@@ -118,7 +126,7 @@ const RegistrationForm = ({ events = [], onSubmit, isSubmitting = false }) => {
       {/* City (Full Width) */}
       <div className="flex flex-col gap-2">
         <label className="text-xs uppercase font-semibold text-gold tracking-widest">
-          Home Port / City
+          City
         </label>
         <input
           type="text"
@@ -134,7 +142,7 @@ const RegistrationForm = ({ events = [], onSubmit, isSubmitting = false }) => {
       {/* Events Selection (Grid Layout with Big Tap Targets) */}
       <div className="flex flex-col gap-3">
         <label className="text-xs uppercase font-semibold text-gold tracking-widest block">
-          Select Your Voyages (Events)
+          Select Your Events
         </label>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {events.map((event) => {
@@ -156,15 +164,26 @@ const RegistrationForm = ({ events = [], onSubmit, isSubmitting = false }) => {
                 </div>
                 
                 <div className="flex-1">
-                  <span className="text-sm font-semibold block">{event.title}</span>
+                  <div className="flex justify-between items-start gap-1">
+                    <span className="text-sm font-semibold block">{event.title}</span>
+                    <span className="text-xs font-heading font-extrabold text-gold flex-shrink-0">
+                      {event.registrationFee > 0 ? `₹${event.registrationFee}` : 'Free'}
+                    </span>
+                  </div>
                   <span className="text-[10px] text-seafoam font-body uppercase mt-0.5 block tracking-wider font-medium">
-                    ⚓ {event.category}
+                    {event.category}
                   </span>
                 </div>
               </label>
             );
           })}
         </div>
+      </div>
+
+      {/* Dynamic Price Summary Box */}
+      <div className="bg-navy border border-gold/20 rounded-xl p-4 flex justify-between items-center font-heading text-sm">
+        <span className="text-seafoam uppercase tracking-wider text-xs font-body">Total Registration Fee:</span>
+        <span className="text-xl font-black text-gold">₹{calculateTotal()}</span>
       </div>
 
       {/* Submit Button */}
@@ -175,7 +194,7 @@ const RegistrationForm = ({ events = [], onSubmit, isSubmitting = false }) => {
           className="flex items-center justify-center gap-2 w-full md:w-auto md:px-10 py-3 bg-gradient-to-r from-baltic to-bronze text-white rounded-lg font-heading text-sm font-bold tracking-widest min-h-[48px] uppercase hover:shadow-lg hover:shadow-baltic/20 hover:scale-[1.02] transform transition-all duration-300 disabled:opacity-50"
         >
           <Anchor className={`w-4 h-4 ${isSubmitting ? 'animate-spin' : ''}`} />
-          {isSubmitting ? 'Charting Coordinates...' : 'Set Sail'}
+          {isSubmitting ? 'Processing...' : 'Register & Pay'}
         </button>
       </div>
 

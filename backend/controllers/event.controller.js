@@ -1,5 +1,104 @@
 const Event = require('../models/Event');
 
+const fallbackEvents = [
+  {
+    _id: 'mock-evt-1',
+    title: 'Deep Dive Debate',
+    slug: 'deep-dive-debate',
+    category: 'literary',
+    description: 'Argue the depths of ancient maritime law and future exploration in this parliamentary debate event.',
+    date: new Date('2026-09-12T10:00:00.000Z'),
+    venue: 'Neptune Auditorium',
+    registrationFee: 150,
+    maxParticipants: 50,
+    coordinators: [{ name: 'Dr. Coral Shore', phone: '9999988888' }],
+  },
+  {
+    _id: 'mock-evt-2',
+    title: 'The Kraken Quiz',
+    slug: 'the-kraken-quiz',
+    category: 'literary',
+    description: 'Encounter general trivia and oceanology questions that will test even the most experienced navigators.',
+    date: new Date('2026-09-13T14:00:00.000Z'),
+    venue: 'The Coral Reef Hall',
+    registrationFee: 100,
+    maxParticipants: 100,
+    coordinators: [{ name: 'Prof. Marine Trench', phone: '9999988887' }],
+  },
+  {
+    _id: 'mock-evt-3',
+    title: 'Sirens of Song',
+    slug: 'sirens-of-song',
+    category: 'cultural',
+    description: 'Enchant the judges and audience with your melodies in our solo and group singing competition.',
+    date: new Date('2026-09-14T18:00:00.000Z'),
+    venue: 'The Siren Deck (Open Stage)',
+    registrationFee: 200,
+    maxParticipants: 30,
+    coordinators: [{ name: 'Siren Melody', phone: '9999988886' }],
+  },
+  {
+    _id: 'mock-evt-4',
+    title: "Poseidon's Arena",
+    slug: 'poseidons-arena',
+    category: 'sports',
+    description: 'Unleash your strength in athletics, swimming, and outdoor sports tournament.',
+    date: new Date('2026-09-12T08:00:00.000Z'),
+    venue: 'AIIMS Deoghar Sports Complex',
+    registrationFee: 300,
+    maxParticipants: 80,
+    coordinators: [{ name: 'Coach Anchor', phone: '9999988885' }],
+  },
+  {
+    _id: 'mock-evt-5',
+    title: 'Anchors Aweigh Art',
+    slug: 'anchors-aweigh-art',
+    category: 'arts',
+    description: 'Paint, sketch, or craft beautiful masterpieces highlighting ancient mythology combined with biological structures.',
+    date: new Date('2026-09-15T10:00:00.000Z'),
+    venue: 'The Art Bay',
+    registrationFee: 50,
+    maxParticipants: 40,
+    coordinators: [{ name: 'Hazel Driftwood', phone: '9999988884' }],
+  },
+  {
+    _id: 'mock-evt-6',
+    title: 'The Helm Hackathon',
+    slug: 'the-helm-hackathon',
+    category: 'technical',
+    description: 'Navigate uncharted digital waters in our 36-hour hackathon. Build tools to improve ocean health or medical navigation.',
+    date: new Date('2026-09-15T09:00:00.000Z'),
+    venue: 'Vasco da Gama IT lab',
+    registrationFee: 0,
+    maxParticipants: 60,
+    coordinators: [{ name: 'Alan Compass', phone: '9999988883' }],
+  },
+  {
+    _id: 'mock-evt-7',
+    title: 'Tide Turners Dance',
+    slug: 'tide-turners-dance',
+    category: 'cultural',
+    description: 'Make waves on the dance floor in this street and classical dance battle.',
+    date: new Date('2026-09-13T19:00:00.000Z'),
+    venue: 'The Amphitheatre',
+    registrationFee: 250,
+    maxParticipants: 25,
+    coordinators: [{ name: 'Pearl Ocean', phone: '9999988882' }],
+  },
+  {
+    _id: 'mock-evt-8',
+    title: 'Voyage of Verse',
+    slug: 'voyage-of-verse',
+    category: 'literary',
+    description: 'Let your words flow like the tides in our poetry and slam verse competition.',
+    date: new Date('2026-09-16T11:00:00.000Z'),
+    venue: 'The Captain Cabin Room',
+    registrationFee: 80,
+    maxParticipants: 35,
+    coordinators: [{ name: 'Shell Verse', phone: '9999988881' }],
+  }
+];
+
 // @desc    Fetch all events
 // @route   GET /api/events
 // @access  Public
@@ -8,10 +107,14 @@ const getEvents = async (req, res, next) => {
     const events = await Event.find({});
     res.json({
       success: true,
-      data: events,
+      data: events.length > 0 ? events : fallbackEvents,
     });
   } catch (error) {
-    next(error);
+    console.warn('Serving fallback events because database is offline');
+    res.json({
+      success: true,
+      data: fallbackEvents,
+    });
   }
 };
 
@@ -23,6 +126,13 @@ const getEventBySlug = async (req, res, next) => {
     const event = await Event.findOne({ slug: req.params.slug.toLowerCase() });
     
     if (!event) {
+      const fallback = fallbackEvents.find((e) => e.slug === req.params.slug.toLowerCase());
+      if (fallback) {
+        return res.json({
+          success: true,
+          data: fallback,
+        });
+      }
       return res.status(404).json({
         success: false,
         message: 'Voyage not found in current charts',
@@ -34,7 +144,18 @@ const getEventBySlug = async (req, res, next) => {
       data: event,
     });
   } catch (error) {
-    next(error);
+    console.warn('Searching fallback events because database is offline');
+    const fallback = fallbackEvents.find((e) => e.slug === req.params.slug.toLowerCase());
+    if (fallback) {
+      return res.json({
+        success: true,
+        data: fallback,
+      });
+    }
+    res.status(404).json({
+      success: false,
+      message: 'Voyage not found in current charts (DB Offline)',
+    });
   }
 };
 

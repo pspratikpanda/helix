@@ -14,7 +14,7 @@ const connectDB = async () => {
     console.log(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
     console.error(`MongoDB Connection Error: ${error.message}`);
-    process.exit(1);
+    console.log('Steering ahead in skeleton fallback mode. (MongoDB connection failed)');
   }
 };
 
