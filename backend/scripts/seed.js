@@ -4,7 +4,7 @@ const dotenv = require('dotenv');
 const path = require('path');
 
 // Load env variables
-dotenv.config({ path: path.join(__dirname, '../.env') });
+dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 const User = require('../models/User');
 const Event = require('../models/Event');
