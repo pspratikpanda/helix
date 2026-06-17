@@ -1,0 +1,109 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Inter:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-navy text-white font-body;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading;
+  }
+}
+
+/* Nautical Wave and Particle Styling */
+.nautical-parchment {
+  background-image: radial-gradient(rgba(231, 192, 125, 0.05) 1px, transparent 0),
+                    radial-gradient(rgba(231, 192, 125, 0.05) 1px, transparent 0);
+  background-size: 24px 24px;
+  background-position: 0 0, 12px 12px;
+}
+
+/* Animations for Sea adventure (floating particles/bubbles) */
+@keyframes floatUp {
+  0% {
+    transform: translateY(10vh) scale(0.6);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.4;
+  }
+  90% {
+    opacity: 0.4;
+  }
+  100% {
+    transform: translateY(-110vh) scale(1.2);
+    opacity: 0;
+  }
+}
+
+.bubble {
+  position: absolute;
+  bottom: 0;
+  background-color: rgba(111, 180, 175, 0.2); /* Soft teal bubbles */
+  border-radius: 50%;
+  pointer-events: none;
+  animation: floatUp 8s infinite linear;
+}
+
+/* Scrollbar customization for a premium nautical look */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #16273f;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2b5e75;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3a99a0;
+}
+
+/* Click Water Ripple Animation */
+.water-ripple {
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  background: radial-gradient(circle, rgba(111, 180, 175, 0.4) 0%, rgba(58, 153, 160, 0.1) 70%, transparent 100%);
+  border: 1.5px solid rgba(195, 224, 202, 0.6); /* pale mint green border */
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  animation: rippleEffect 0.8s ease-out forwards;
+  z-index: 9999;
+}
+
+@keyframes rippleEffect {
+  0% {
+    width: 0px;
+    height: 0px;
+    opacity: 1;
+  }
+  100% {
+    width: 130px;
+    height: 130px;
+    opacity: 0;
+  }
+}
+
+/* Scroll Reveal Animations */
+.reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(30px) scale(0.97);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal-on-scroll.revealed {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
