@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Compass, Map, Filter } from 'lucide-react';
+import { Compass, Map, Filter, Plus } from 'lucide-react';
 import apiClient from '../api/apiClient';
 import EventCard from '../components/EventCard';
 import WaveDivider from '../components/WaveDivider';
+import { useAuth } from '../context/AuthContext';
+import EventModal from '../components/EventModal';
 
 const Events = () => {
+  const { user } = useAuth();
   const [events, setEvents] = useState([]);
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [activeTab, setActiveTab] = useState('all');
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
 
   const categories = [
     { key: 'all', label: 'All Voyages' },
@@ -20,23 +25,28 @@ const Events = () => {
     { key: 'technical', label: 'Technical' },
   ];
 
-  useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        const res = await apiClient.get('/events');
-        if (res.data && res.data.success) {
-          setEvents(res.data.data);
-          setFilteredEvents(res.data.data);
-        }
-      } catch (err) {
-        console.error('Failed to navigate events:', err.message);
-      } finally {
-        setLoading(false);
+  const fetchEvents = async () => {
+    setLoading(true);
+    try {
+      const res = await apiClient.get('/events');
+      if (res.data && res.data.success) {
+        setEvents(res.data.data);
+        setFilteredEvents(res.data.data);
       }
-    };
+    } catch (err) {
+      console.error('Failed to navigate events:', err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchEvents();
   }, []);
+
+  useEffect(() => {
+    console.log('Current logged-in user in Events page:', user);
+  }, [user]);
 
   // Filter events when active tab changes
   useEffect(() => {
@@ -65,6 +75,19 @@ const Events = () => {
           <p className="text-xs md:text-sm text-seafoam uppercase tracking-widest font-semibold">
             Choose your category and chart your course
           </p>
+          {user?.role === 'admin' && (
+            <div className="flex justify-center pt-2">
+              <button
+                onClick={() => {
+                  setSelectedEvent(null);
+                  setIsModalOpen(true);
+                }}
+                className="flex items-center gap-1.5 px-6 py-2.5 bg-gradient-to-r from-baltic to-bronze border border-gold/45 text-white rounded-lg text-xs font-bold uppercase tracking-widest hover:scale-[1.02] transform transition-transform min-h-[44px]"
+              >
+                <Plus className="w-4 h-4 text-gold" /> Add Voyage
+              </button>
+            </div>
+          )}
         </div>
 
         {/* --- CATEGORY TABS (Mobile Scrollable) --- */}
@@ -113,6 +136,12 @@ const Events = () => {
         </div>
 
       </div>
+      <EventModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={fetchEvents}
+        event={selectedEvent}
+      />
     </div>
   );
 };

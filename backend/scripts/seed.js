@@ -34,6 +34,7 @@ const seedDB = async () => {
     const adminUser = await User.create({
       name: 'Admiral Admin',
       email: 'admin@helix.com',
+      username: 'admin',
       password: adminPassword,
       college: 'AIIMS Deoghar',
       phone: '9876543210',
@@ -43,6 +44,7 @@ const seedDB = async () => {
     const user1 = await User.create({
       name: 'Captain Jack Sparrow',
       email: 'jack@blackpearl.com',
+      username: 'jack',
       password: userPassword,
       college: 'Tortuga Academy of Navigation',
       phone: '9876543211',
@@ -52,6 +54,7 @@ const seedDB = async () => {
     const user2 = await User.create({
       name: 'Nemo',
       email: 'nemo@coralreef.com',
+      username: 'nemo',
       password: userPassword,
       college: 'Great Barrier Reef School',
       phone: '9876543212',
@@ -61,6 +64,7 @@ const seedDB = async () => {
     const user3 = await User.create({
       name: 'Ariel Triton',
       email: 'ariel@atlantica.com',
+      username: 'ariel',
       password: userPassword,
       college: 'Atlantis University of Arts',
       phone: '9876543213',

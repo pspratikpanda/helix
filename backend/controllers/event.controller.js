@@ -1,6 +1,19 @@
 const Event = require('../models/Event');
 
-const fallbackEvents = [
+const slugify = (text) => {
+  if (!text) return '';
+  return text
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')           // Replace spaces with -
+    .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
+    .replace(/\-\-+/g, '-')         // Replace multiple - with single -
+    .replace(/^-+/, '')             // Trim - from start of text
+    .replace(/-+$/, '');            // Trim - from end of text
+};
+
+let fallbackEvents = [
   {
     _id: 'mock-evt-1',
     title: 'Deep Dive Debate',
@@ -164,7 +177,11 @@ const getEventBySlug = async (req, res, next) => {
 // @access  Private (Admin Only)
 const createEvent = async (req, res, next) => {
   try {
-    // TODO: add title-to-slug helper validation if needed
+    if (!req.body.slug && req.body.title) {
+      req.body.slug = slugify(req.body.title);
+    } else if (req.body.slug) {
+      req.body.slug = slugify(req.body.slug);
+    }
     const event = await Event.create(req.body);
     
     res.status(201).json({
@@ -172,7 +189,25 @@ const createEvent = async (req, res, next) => {
       data: event,
     });
   } catch (error) {
-    next(error);
+    console.warn('Creating event in-memory because database is offline');
+    const newEvent = {
+      _id: `mock-evt-${Date.now()}`,
+      title: req.body.title,
+      slug: req.body.slug || slugify(req.body.title),
+      category: req.body.category || 'cultural',
+      description: req.body.description,
+      date: req.body.date,
+      venue: req.body.venue,
+      registrationFee: Number(req.body.registrationFee || 0),
+      maxParticipants: req.body.maxParticipants ? Number(req.body.maxParticipants) : undefined,
+      posterImage: req.body.posterImage,
+      coordinators: req.body.coordinators || [],
+    };
+    fallbackEvents.push(newEvent);
+    res.status(201).json({
+      success: true,
+      data: newEvent,
+    });
   }
 };
 
@@ -181,6 +216,11 @@ const createEvent = async (req, res, next) => {
 // @access  Private (Admin Only)
 const updateEvent = async (req, res, next) => {
   try {
+    if (req.body.title && !req.body.slug) {
+      req.body.slug = slugify(req.body.title);
+    } else if (req.body.slug) {
+      req.body.slug = slugify(req.body.slug);
+    }
     const event = await Event.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
@@ -198,7 +238,24 @@ const updateEvent = async (req, res, next) => {
       data: event,
     });
   } catch (error) {
-    next(error);
+    console.warn('Updating event in-memory because database is offline');
+    const index = fallbackEvents.findIndex((e) => e._id === req.params.id);
+    if (index === -1) {
+      return res.status(404).json({
+        success: false,
+        message: 'Voyage not found to upgrade (DB Offline)',
+      });
+    }
+    const updatedEvent = {
+      ...fallbackEvents[index],
+      ...req.body,
+      slug: req.body.title && !req.body.slug ? slugify(req.body.title) : (req.body.slug ? slugify(req.body.slug) : fallbackEvents[index].slug),
+    };
+    fallbackEvents[index] = updatedEvent;
+    res.json({
+      success: true,
+      data: updatedEvent,
+    });
   }
 };
 
@@ -221,7 +278,19 @@ const deleteEvent = async (req, res, next) => {
       data: { id: req.params.id },
     });
   } catch (error) {
-    next(error);
+    console.warn('Deleting event in-memory because database is offline');
+    const index = fallbackEvents.findIndex((e) => e._id === req.params.id);
+    if (index === -1) {
+      return res.status(404).json({
+        success: false,
+        message: 'Voyage not found to delete (DB Offline)',
+      });
+    }
+    fallbackEvents = fallbackEvents.filter((e) => e._id !== req.params.id);
+    res.json({
+      success: true,
+      data: { id: req.params.id },
+    });
   }
 };
 

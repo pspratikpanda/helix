@@ -1,31 +1,66 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { Calendar, MapPin, Phone, User, Compass, ArrowLeft, Anchor, CircleDollarSign, ShieldAlert } from 'lucide-react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { Calendar, MapPin, Phone, User, Compass, ArrowLeft, Anchor, CircleDollarSign, ShieldAlert, Edit, Trash2 } from 'lucide-react';
 import apiClient from '../api/apiClient';
+import { useAuth } from '../context/AuthContext';
+import EventModal from '../components/EventModal';
+import toast from 'react-hot-toast';
 
 const EventDetail = () => {
   const { slug } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const fetchEventDetails = async () => {
+    try {
+      const res = await apiClient.get(`/events/${slug}`);
+      if (res.data && res.data.success) {
+        setEvent(res.data.data);
+      }
+    } catch (err) {
+      console.error('Failed to view voyage coordinates:', err.message);
+      setError(err.message || 'Voyage not found in charts');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchEventDetails = async () => {
-      try {
-        const res = await apiClient.get(`/events/${slug}`);
-        if (res.data && res.data.success) {
-          setEvent(res.data.data);
-        }
-      } catch (err) {
-        console.error('Failed to view voyage coordinates:', err.message);
-        setError(err.message || 'Voyage not found in charts');
-      } finally {
-        setLoading(false);
-      }
-    };
-
+    setLoading(true);
     fetchEventDetails();
   }, [slug]);
+
+  const refreshDetails = async () => {
+    try {
+      const res = await apiClient.get(`/events/${slug}`);
+      if (res.data && res.data.success) {
+        setEvent(res.data.data);
+      }
+    } catch (err) {
+      console.error('Failed to refresh details:', err);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (window.confirm('Are you absolutely sure you want to scuttle this voyage? This cannot be undone.')) {
+      try {
+        const res = await apiClient.delete(`/events/${event._id}`);
+        if (res.data && res.data.success) {
+          toast.success('Voyage deleted from charts successfully!');
+          navigate('/events');
+        } else {
+          toast.error(res.data.message || 'Failed to delete voyage.');
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error(err.response?.data?.message || err.message || 'Failed to delete event.');
+      }
+    }
+  };
 
   if (loading) {
     return (
@@ -205,12 +240,31 @@ const EventDetail = () => {
               <div className="pt-2">
                 <Link
                   to="/register"
-                  className="flex items-center justify-center gap-2 w-full py-3 bg-gradient-to-r from-baltic to-bronze hover:from-baltic hover:to-gold text-white font-heading font-bold text-sm tracking-widest rounded-lg transition-all duration-300 min-h-[48px] uppercase hover:scale-[1.02] shadow-lg shadow-baltic/10"
+                  className="flex items-center justify-center gap-2 w-full py-3 bg-gradient-to-r from-baltic to-bronze hover:from-baltic hover:to-gold text-white font-heading font-bold text-sm tracking-widest rounded-lg transition-all duration-300 min-h-[44px] uppercase hover:scale-[1.02] shadow-lg shadow-baltic/10"
                 >
                   <Anchor className="w-4 h-4" />
                   Set Sail for this Event
                 </Link>
               </div>
+
+              {user?.role === 'admin' && (
+                <div className="flex flex-col gap-2.5 pt-4 border-t border-ocean/50">
+                  <button
+                    onClick={() => setIsModalOpen(true)}
+                    className="flex items-center justify-center gap-2 w-full py-2.5 bg-ocean border border-gold/40 text-gold hover:text-white hover:bg-gold/10 font-heading font-bold text-xs tracking-widest rounded-lg transition-all duration-300 min-h-[44px] uppercase hover:scale-[1.02]"
+                  >
+                    <Edit className="w-4 h-4" />
+                    Edit Voyage Settings
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    className="flex items-center justify-center gap-2 w-full py-2.5 bg-rose-950/20 border border-rose-500/50 hover:bg-rose-500 hover:text-white text-rose-300 font-heading font-bold text-xs tracking-widest rounded-lg transition-all duration-300 min-h-[44px] uppercase hover:scale-[1.02]"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Scuttle Voyage
+                  </button>
+                </div>
+              )}
 
             </div>
 
@@ -219,6 +273,12 @@ const EventDetail = () => {
         </div>
       </div>
 
+      <EventModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={refreshDetails}
+        event={event}
+      />
     </div>
   );
 };

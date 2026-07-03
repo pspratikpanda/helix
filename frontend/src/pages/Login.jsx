@@ -71,14 +71,14 @@ const Login = () => {
           {/* Email field */}
           <div className="flex flex-col gap-2">
             <label className="text-[10px] uppercase font-semibold text-gold tracking-widest flex items-center gap-1.5">
-              <Mail className="w-3.5 h-3.5" /> Email Coordinates
+              <Mail className="w-3.5 h-3.5" /> Email or User ID
             </label>
             <input
-              type="email"
+              type="text"
               name="email"
               value={formData.email}
               onChange={handleChange}
-              placeholder="e.g. navigator@helix.com"
+              placeholder="e.g. admin or navigator@helix.com"
               className="w-full bg-navy border border-seafoam focus:border-gold rounded-lg px-4 py-3 text-white text-base min-h-[48px] focus:outline-none transition-colors"
               required
             />
