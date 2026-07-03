@@ -3,10 +3,13 @@
   "version": "1.0.0",
   "description": "HELIX 2026 - Root scripts for MERN Stack integration",
   "scripts": {
-    "dev": "npm --prefix backend run dev & npm --prefix frontend run dev",
+    "dev": "concurrently \"npm --prefix backend run dev\" \"npm --prefix frontend run dev\"",
     "dev:frontend": "npm --prefix frontend run dev",
     "dev:backend": "npm --prefix backend run dev",
     "seed": "npm --prefix backend run seed",
     "install:all": "npm --prefix frontend install && npm --prefix backend install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
   }
 }

@@ -26,12 +26,19 @@ const EventCard = ({ event, loading = false }) => {
   const formatDate = (dateString) => {
     if (!dateString) return 'Date TBA';
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   };
 
   return (
-    <div className="reveal-on-scroll group bg-ocean border border-gold/20 rounded-xl overflow-hidden shadow-lg hover:shadow-2xl hover:shadow-baltic/20 hover:-translate-y-2 transform transition-all duration-300 flex flex-col justify-between h-[380px]">
-      
+    <Link
+      to={`/events/${event.slug}`}
+      className="reveal-on-scroll group bg-ocean border border-gold/20 rounded-xl overflow-hidden shadow-lg hover:shadow-2xl hover:shadow-baltic/20 hover:-translate-y-2 transform transition-all duration-300 flex flex-col justify-between min-h-[350px] pb-4"
+    >
       <div>
         {/* Cover image with ratio 16/9 */}
         <div className="relative w-full aspect-video overflow-hidden">
@@ -48,7 +55,7 @@ const EventCard = ({ event, loading = false }) => {
 
         {/* Card Body */}
         <div className="p-5">
-          <h3 className="font-heading text-lg font-bold text-gold tracking-wide mb-2 line-clamp-1">
+          <h3 className="font-heading text-lg font-bold text-gold tracking-wide mb-2 line-clamp-1 group-hover:text-white transition-colors">
             {event.title}
           </h3>
           <p className="text-xs text-white/80 font-body line-clamp-2 mb-4 leading-relaxed">
@@ -68,19 +75,7 @@ const EventCard = ({ event, loading = false }) => {
           </div>
         </div>
       </div>
-
-      {/* Explore Button - full width at card bottom */}
-      <div className="px-5 pb-5">
-        <Link
-          to={`/events/${event.slug}`}
-          className="flex items-center justify-center gap-2 w-full min-h-[44px] bg-navy border border-gold/30 hover:border-gold hover:bg-ocean/20 text-gold hover:text-white rounded font-body text-sm font-semibold tracking-wider transition-all duration-300 uppercase"
-        >
-          <Compass className="w-4 h-4 text-gold group-hover:rotate-45 transition-transform" />
-          Explore Course
-        </Link>
-      </div>
-
-    </div>
+    </Link>
   );
 };
 

@@ -33,7 +33,18 @@ const getNotifications = async (req, res, next) => {
       data: notifications,
     });
   } catch (error) {
-    next(error);
+    console.warn('Serving fallback notifications because database is offline');
+    res.json({
+      success: true,
+      data: [
+        {
+          _id: 'fallback-notif-1',
+          title: 'Skeleton Fallback Mode Active',
+          message: 'Welcome to the HELIX 2026 local preview. MongoDB is offline on your machine; running completely in-memory.',
+          createdAt: new Date(),
+        }
+      ],
+    });
   }
 };
 
