@@ -34,8 +34,13 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['user', 'admin'],
-    default: 'user',
+    enum: ['student', 'admin'],
+    default: 'student',
+  },
+  delegatePassStatus: {
+    type: String,
+    enum: ['NONE', 'PENDING', 'VERIFIED', 'REJECTED'],
+    default: 'NONE',
   },
   registeredEvents: [
     {
@@ -49,7 +54,6 @@ const userSchema = new mongoose.Schema({
   },
 });
 
-// Explicitly ensure the email index is declared as requested
-userSchema.index({ email: 1 });
+
 
 module.exports = mongoose.model('User', userSchema);

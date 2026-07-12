@@ -21,7 +21,6 @@ const EventModal = ({ isOpen, onClose, onSuccess, event = null }) => {
     description: '',
     date: '',
     venue: '',
-    registrationFee: 0,
     maxParticipants: '',
     posterImage: '',
     coordinators: [{ name: '', phone: '' }],
@@ -36,7 +35,6 @@ const EventModal = ({ isOpen, onClose, onSuccess, event = null }) => {
         description: event.description || '',
         date: event.date ? toDatetimeLocal(event.date) : '',
         venue: event.venue || '',
-        registrationFee: event.registrationFee || 0,
         maxParticipants: event.maxParticipants || '',
         posterImage: event.posterImage || '',
         coordinators: event.coordinators && event.coordinators.length > 0
@@ -50,7 +48,6 @@ const EventModal = ({ isOpen, onClose, onSuccess, event = null }) => {
         description: '',
         date: '',
         venue: '',
-        registrationFee: 0,
         maxParticipants: '',
         posterImage: '',
         coordinators: [{ name: '', phone: '' }],
@@ -102,7 +99,6 @@ const EventModal = ({ isOpen, onClose, onSuccess, event = null }) => {
       const payload = {
         ...formData,
         coordinators: filteredCoordinators,
-        registrationFee: Number(formData.registrationFee),
         maxParticipants: formData.maxParticipants !== '' ? Number(formData.maxParticipants) : undefined,
       };
 
@@ -232,21 +228,7 @@ const EventModal = ({ isOpen, onClose, onSuccess, event = null }) => {
             </div>
           </div>
 
-          {/* Registration Fee, Max Participants, and Poster Image Row */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] uppercase font-semibold text-gold tracking-wider flex items-center gap-1">
-                <DollarSign className="w-3.5 h-3.5" /> Boarding Fee (INR)
-              </label>
-              <input
-                type="number"
-                name="registrationFee"
-                value={formData.registrationFee}
-                onChange={handleChange}
-                min="0"
-                className="w-full bg-navy border border-seafoam focus:border-gold rounded-lg px-3 py-2.5 text-sm focus:outline-none transition-colors"
-              />
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
               <label className="text-[10px] uppercase font-semibold text-gold tracking-wider flex items-center gap-1">
                 <Users className="w-3.5 h-3.5" /> Max Crew Size

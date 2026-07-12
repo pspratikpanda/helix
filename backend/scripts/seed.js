@@ -8,9 +8,11 @@ dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 const User = require('../models/User');
 const Event = require('../models/Event');
-const Registration = require('../models/Registration');
+const DelegatePass = require('../models/DelegatePass');
+const EventRegistration = require('../models/EventRegistration');
 const Notification = require('../models/Notification');
 const Sponsor = require('../models/Sponsor');
+const Counter = require('../models/Counter');
 
 const seedDB = async () => {
   try {
@@ -21,10 +23,16 @@ const seedDB = async () => {
     // Clear existing collections
     await User.deleteMany({});
     await Event.deleteMany({});
-    await Registration.deleteMany({});
+    await DelegatePass.deleteMany({});
+    await EventRegistration.deleteMany({});
     await Notification.deleteMany({});
     await Sponsor.deleteMany({});
+    await Counter.deleteMany({});
     console.log('Cleared existing collections.');
+
+    // Initialize atomic sequence counter
+    await Counter.create({ id: 'delegatePassSeq', seq: 1 });
+    console.log('Initialized Counter sequence collection.');
 
     // 1. Seed Users (Hashed passwords)
     const salt = bcrypt.genSaltSync(10);
@@ -48,7 +56,8 @@ const seedDB = async () => {
       password: userPassword,
       college: 'Tortuga Academy of Navigation',
       phone: '9876543211',
-      role: 'user',
+      role: 'student',
+      delegatePassStatus: 'VERIFIED',
     });
 
     const user2 = await User.create({
@@ -58,7 +67,8 @@ const seedDB = async () => {
       password: userPassword,
       college: 'Great Barrier Reef School',
       phone: '9876543212',
-      role: 'user',
+      role: 'student',
+      delegatePassStatus: 'PENDING',
     });
 
     const user3 = await User.create({
@@ -68,12 +78,13 @@ const seedDB = async () => {
       password: userPassword,
       college: 'Atlantis University of Arts',
       phone: '9876543213',
-      role: 'user',
+      role: 'student',
+      delegatePassStatus: 'NONE',
     });
 
-    console.log('Seeded Users: 1 Admin, 3 Regular.');
+    console.log('Seeded Users: 1 Admin, 3 Students.');
 
-    // 2. Seed 8 Events (Dates: Sept 12 - Sept 16, 2026)
+    // 2. Seed 8 Events
     const events = await Event.insertMany([
       {
         title: 'Deep Dive Debate',
@@ -82,7 +93,6 @@ const seedDB = async () => {
         description: 'Argue the depths of ancient maritime law and future exploration in this parliamentary debate event.',
         date: new Date('2026-09-12T10:00:00.000Z'),
         venue: 'Neptune Auditorium',
-        registrationFee: 150,
         maxParticipants: 50,
         posterImage: 'https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&w=800&q=80',
         coordinators: [
@@ -96,7 +106,6 @@ const seedDB = async () => {
         description: 'Encounter general trivia and oceanology questions that will test even the most experienced navigators.',
         date: new Date('2026-09-13T14:00:00.000Z'),
         venue: 'The Coral Reef Hall',
-        registrationFee: 100,
         maxParticipants: 100,
         posterImage: 'https://images.unsplash.com/photo-1518837695005-2083093ee35b?auto=format&fit=crop&w=800&q=80',
         coordinators: [
@@ -110,7 +119,6 @@ const seedDB = async () => {
         description: 'Enchant the judges and audience with your melodies in our flagship solo and group singing competition.',
         date: new Date('2026-09-14T18:00:00.000Z'),
         venue: 'The Siren Deck (Open Stage)',
-        registrationFee: 200,
         maxParticipants: 30,
         posterImage: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=800&q=80',
         coordinators: [
@@ -124,7 +132,6 @@ const seedDB = async () => {
         description: 'Unleash your strength in athletics, swimming, and outdoor sports tournament.',
         date: new Date('2026-09-12T08:00:00.000Z'),
         venue: 'AIIMS Deoghar Sports Complex',
-        registrationFee: 300,
         maxParticipants: 80,
         posterImage: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80',
         coordinators: [
@@ -138,7 +145,6 @@ const seedDB = async () => {
         description: 'Paint, sketch, or craft beautiful masterpieces highlighting ancient mythology combined with biological structures.',
         date: new Date('2026-09-15T10:00:00.000Z'),
         venue: 'The Art Bay',
-        registrationFee: 50,
         maxParticipants: 40,
         posterImage: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=800&q=80',
         coordinators: [
@@ -152,7 +158,6 @@ const seedDB = async () => {
         description: 'Navigate uncharted digital waters in our 36-hour hackathon. Build tools to improve ocean health or medical navigation.',
         date: new Date('2026-09-15T09:00:00.000Z'),
         venue: 'Vasco da Gama IT lab',
-        registrationFee: 0,
         maxParticipants: 60,
         posterImage: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=800&q=80',
         coordinators: [
@@ -166,7 +171,6 @@ const seedDB = async () => {
         description: 'Make waves on the dance floor in this street and classical dance battle.',
         date: new Date('2026-09-13T19:00:00.000Z'),
         venue: 'The Amphitheatre',
-        registrationFee: 250,
         maxParticipants: 25,
         posterImage: 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?auto=format&fit=crop&w=800&q=80',
         coordinators: [
@@ -180,7 +184,6 @@ const seedDB = async () => {
         description: 'Let your words flow like the tides in our poetry and slam verse competition.',
         date: new Date('2026-09-16T11:00:00.000Z'),
         venue: 'The Captain Cabin Room',
-        registrationFee: 80,
         maxParticipants: 35,
         posterImage: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=80',
         coordinators: [
@@ -227,40 +230,44 @@ const seedDB = async () => {
 
     console.log('Seeded 5 Sponsors across tiers.');
 
-    // 4. Seed Registrations
-    const reg1 = new Registration({
+    // 4. Seed Delegate Passes
+    const pass1 = await DelegatePass.create({
       user: user1._id,
-      name: user1.name,
-      email: user1.email,
-      phone: user1.phone,
-      college: user1.college,
-      city: 'Tortuga',
-      eventsSelected: [events[0]._id, events[1]._id],
-      registrationId: 'HLX-0001',
-      paymentStatus: 'paid',
+      registrationId: 'FEST26-0001',
+      paymentStatus: 'VERIFIED',
+      paymentMethod: 'UPI',
+      utr: '111122223333',
+      paymentScreenshot: 'https://images.unsplash.com/photo-1579621970795-87facc2f976d?auto=format&fit=crop&w=800&q=80',
+      qrToken: 'seed_qr_token_jack_sparrow_777',
+      verifiedBy: adminUser._id,
+      verifiedAt: new Date(),
     });
-    await reg1.save();
 
-    const reg2 = new Registration({
+    const pass2 = await DelegatePass.create({
       user: user2._id,
-      name: user2.name,
-      email: user2.email,
-      phone: user2.phone,
-      college: user2.college,
-      city: 'Sydney Harbour',
-      eventsSelected: [events[1]._id, events[5]._id],
-      registrationId: 'HLX-0002',
-      paymentStatus: 'pending',
+      paymentStatus: 'PENDING',
+      paymentMethod: 'UPI',
+      utr: '444455556666',
+      paymentScreenshot: 'https://images.unsplash.com/photo-1579621970795-87facc2f976d?auto=format&fit=crop&w=800&q=80',
     });
-    await reg2.save();
+
+    console.log('Seeded 2 Delegate Passes.');
+
+    // 5. Seed Event Registrations
+    await EventRegistration.create([
+      { user: user1._id, event: events[0]._id },
+      { user: user1._id, event: events[1]._id },
+      { user: user2._id, event: events[1]._id },
+      { user: user2._id, event: events[5]._id },
+    ]);
 
     // Update user registered events lists
     await User.findByIdAndUpdate(user1._id, { $set: { registeredEvents: [events[0]._id, events[1]._id] } });
     await User.findByIdAndUpdate(user2._id, { $set: { registeredEvents: [events[1]._id, events[5]._id] } });
 
-    console.log('Seeded 2 Registrations (HLX-0001, HLX-0002).');
+    console.log('Seeded Event Registrations.');
 
-    // 5. Seed 2 Notifications
+    // 6. Seed 2 Notifications
     await Notification.create({
       title: 'Voyage Schedule Alert',
       message: 'The Kraken Quiz coordinates have changed to The Coral Reef Hall on Sept 13 at 14:00.',

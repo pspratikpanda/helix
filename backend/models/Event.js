@@ -34,10 +34,7 @@ const eventSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
-  registrationFee: {
-    type: Number,
-    default: 0,
-  },
+
   maxParticipants: {
     type: Number,
   },
@@ -51,7 +48,6 @@ const eventSchema = new mongoose.Schema({
   },
 });
 
-// Explicitly add index to the slug field
-eventSchema.index({ slug: 1 });
+
 
 module.exports = mongoose.model('Event', eventSchema);

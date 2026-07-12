@@ -1,5 +1,5 @@
 const Notification = require('../models/Notification');
-const Registration = require('../models/Registration');
+const EventRegistration = require('../models/EventRegistration');
 
 // @desc    Get notifications relevant to the current user
 // @route   GET /api/notifications
@@ -9,7 +9,7 @@ const getNotifications = async (req, res, next) => {
     const userId = req.user._id;
 
     // Check if the user is registered for any event
-    const registrationCount = await Registration.countDocuments({ user: userId });
+    const registrationCount = await EventRegistration.countDocuments({ user: userId });
     
     // Build query conditions
     const audienceFilters = ['all'];

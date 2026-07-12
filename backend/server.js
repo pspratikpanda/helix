@@ -20,6 +20,7 @@ const notificationRoutes = require('./routes/notification.routes');
 const galleryRoutes = require('./routes/gallery.routes');
 const sponsorRoutes = require('./routes/sponsor.routes');
 const adminRoutes = require('./routes/admin.routes');
+const delegatePassRoutes = require('./routes/delegatePass.routes');
 
 // Connect to Database
 connectDB();
@@ -91,6 +92,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/gallery', galleryRoutes);
 app.use('/api/sponsors', sponsorRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/delegate-pass', delegatePassRoutes);
 
 // Root route
 app.get('/', (req, res) => {
