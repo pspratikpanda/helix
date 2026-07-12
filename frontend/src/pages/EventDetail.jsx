@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Calendar, MapPin, Phone, User, Compass, ArrowLeft, Anchor, CircleDollarSign, ShieldAlert, Edit, Trash2 } from 'lucide-react';
+import { Calendar, MapPin, Phone, User, Compass, ArrowLeft, Anchor, CircleDollarSign, ShieldAlert, Edit, Trash2, CheckCircle } from 'lucide-react';
 import apiClient from '../api/apiClient';
 import { useAuth } from '../context/AuthContext';
 import EventModal from '../components/EventModal';
@@ -14,6 +14,13 @@ const EventDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const isRegistered = user && user.registeredEvents && event && user.registeredEvents.some(id => 
+    id === event._id || 
+    id._id === event._id || 
+    id.toString() === event._id.toString() ||
+    (typeof id === 'object' && id._id && id._id.toString() === event._id.toString())
+  );
 
   const fetchEventDetails = async () => {
     try {
@@ -137,6 +144,11 @@ const EventDetail = () => {
                   Capacity: {event.maxParticipants} Crew
                 </span>
               )}
+              {isRegistered && (
+                <span className="bg-mint/20 text-mint text-[10px] font-body uppercase font-bold tracking-wider px-2.5 py-0.5 rounded border border-mint/45 flex items-center gap-1">
+                  <CheckCircle className="w-3 h-3" /> Registered
+                </span>
+              )}
             </div>
 
             <h1 className="font-heading text-2xl md:text-4xl lg:text-5xl font-black text-gold tracking-wide leading-tight">
@@ -238,13 +250,28 @@ const EventDetail = () => {
 
               {/* Set Sail CTA Button */}
               <div className="pt-2">
-                <Link
-                  to="/register"
-                  className="flex items-center justify-center gap-2 w-full py-3 bg-gradient-to-r from-baltic to-bronze hover:from-baltic hover:to-gold text-white font-heading font-bold text-sm tracking-widest rounded-lg transition-all duration-300 min-h-[44px] uppercase hover:scale-[1.02] shadow-lg shadow-baltic/10"
-                >
-                  <Anchor className="w-4 h-4" />
-                  Set Sail for this Event
-                </Link>
+                {isRegistered ? (
+                  <div className="flex flex-col gap-2.5">
+                    <div className="flex items-center justify-center gap-2 w-full py-3 bg-mint/10 border border-mint/40 text-mint font-heading font-bold text-sm tracking-widest rounded-lg min-h-[44px] uppercase select-none">
+                      <CheckCircle className="w-4 h-4 text-mint" />
+                      Already Registered
+                    </div>
+                    <Link
+                      to="/dashboard"
+                      className="flex items-center justify-center gap-2 w-full py-2 bg-navy border border-gold/45 text-gold hover:text-white rounded-lg font-heading text-xs font-bold tracking-widest min-h-[36px] uppercase hover:bg-ocean/20 transition-all text-center"
+                    >
+                      View in Dashboard
+                    </Link>
+                  </div>
+                ) : (
+                  <Link
+                    to="/register"
+                    className="flex items-center justify-center gap-2 w-full py-3 bg-gradient-to-r from-baltic to-bronze hover:from-baltic hover:to-gold text-white font-heading font-bold text-sm tracking-widest rounded-lg transition-all duration-300 min-h-[44px] uppercase hover:scale-[1.02] shadow-lg shadow-baltic/10"
+                  >
+                    <Anchor className="w-4 h-4" />
+                    Set Sail for this Event
+                  </Link>
+                )}
               </div>
 
               {user?.role === 'admin' && (

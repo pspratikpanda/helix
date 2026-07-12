@@ -141,14 +141,16 @@ const Register = () => {
       });
 
       if (res.data && res.data.success) {
-        setEventSuccessData(res.data.data);
         toast.success('Successfully registered for events!', { id: toastId });
+        const registered = res.data.data;
         
-        // Update user state context if necessary or just reload status
-        if (window.location.reload) {
-          // simple delay reload to update navbar status
-          setTimeout(() => window.location.reload(), 1500);
-        }
+        setTimeout(() => {
+          if (registered && registered.length > 0) {
+            window.location.href = `/events/${registered[0].slug}`;
+          } else {
+            window.location.href = '/events';
+          }
+        }, 1500);
       }
     } catch (err) {
       console.error('Event registration failed:', err.message);
