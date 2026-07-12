@@ -36,7 +36,10 @@ const applyPass = async (req, res, next) => {
 
     // 3. Upload screenshot to Cloudinary
     let screenshotUrl = '';
-    const isCloudinaryConfigured = process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET;
+    const isCloudinaryConfigured = 
+      process.env.CLOUDINARY_CLOUD_NAME && !process.env.CLOUDINARY_CLOUD_NAME.startsWith('your') &&
+      process.env.CLOUDINARY_API_KEY && !process.env.CLOUDINARY_API_KEY.startsWith('your') &&
+      process.env.CLOUDINARY_API_SECRET && !process.env.CLOUDINARY_API_SECRET.startsWith('your');
 
     if (isCloudinaryConfigured) {
       try {

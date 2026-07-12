@@ -69,7 +69,7 @@ const Dashboard = () => {
     if (user?.role === 'admin') {
       setLoadingAdminPasses(true);
       try {
-        const res = await apiClient.get('/api/admin/delegate-passes');
+        const res = await apiClient.get('/admin/delegate-passes');
         if (res.data && res.data.success) {
           setDelegatePasses(res.data.data);
         }
@@ -86,7 +86,7 @@ const Dashboard = () => {
   const fetchCheckInStats = async (search = '') => {
     if (user?.role === 'admin') {
       try {
-        const res = await apiClient.get('/api/admin/check-in/stats', {
+        const res = await apiClient.get('/admin/check-in/stats', {
           params: { search },
         });
         if (res.data && res.data.success) {
@@ -152,7 +152,7 @@ const Dashboard = () => {
 
     const toastId = toast.loading(`Processing verification for status ${status}...`);
     try {
-      const res = await apiClient.post(`/api/admin/delegate-passes/${passId}/verify`, {
+      const res = await apiClient.post(`/admin/delegate-passes/${passId}/verify`, {
         status,
         adminRemark,
       });

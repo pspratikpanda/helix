@@ -77,7 +77,7 @@ const QRScanner = () => {
     const toastId = toast.loading('Verifying check-in credentials...');
     
     try {
-      const res = await apiClient.post('/api/admin/check-in', payload);
+      const res = await apiClient.post('/admin/check-in', payload);
       if (res.data && res.data.success) {
         setCheckInResult({
           success: true,
