@@ -149,7 +149,7 @@ const Home = () => {
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto pt-4">
             <Link
-              to="/register"
+              to="/signup"
               className="btn-wave-hover flex items-center justify-center gap-2 w-full sm:w-56 min-h-[48px] bg-gradient-to-r from-baltic to-bronze text-white font-heading font-bold text-sm tracking-widest rounded-lg shadow-lg hover:shadow-baltic/30 hover:scale-105 transform transition-all duration-300 uppercase"
             >
               <Anchor className="w-4 h-4" />
