@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create Axios client using Vite environment endpoints
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3001/api',
+  baseURL: import.meta.env.VITE_API_URL || 'http://127.0.0.1:3001/api',
   headers: {
     'Content-Type': 'application/json',
   },

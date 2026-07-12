@@ -8,9 +8,11 @@ dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 const User = require('../models/User');
 const Event = require('../models/Event');
-const Registration = require('../models/Registration');
+const DelegatePass = require('../models/DelegatePass');
+const EventRegistration = require('../models/EventRegistration');
 const Notification = require('../models/Notification');
 const Sponsor = require('../models/Sponsor');
+const Counter = require('../models/Counter');
 
 const seedDB = async () => {
   try {
@@ -21,10 +23,16 @@ const seedDB = async () => {
     // Clear existing collections
     await User.deleteMany({});
     await Event.deleteMany({});
-    await Registration.deleteMany({});
+    await DelegatePass.deleteMany({});
+    await EventRegistration.deleteMany({});
     await Notification.deleteMany({});
     await Sponsor.deleteMany({});
+    await Counter.deleteMany({});
     console.log('Cleared existing collections.');
+
+    // Initialize atomic sequence counter
+    await Counter.create({ id: 'delegatePassSeq', seq: 1 });
+    console.log('Initialized Counter sequence collection.');
 
     // 1. Seed Users (Hashed passwords)
     const salt = bcrypt.genSaltSync(10);
@@ -48,7 +56,8 @@ const seedDB = async () => {
       password: userPassword,
       college: 'Tortuga Academy of Navigation',
       phone: '9876543211',
-      role: 'user',
+      role: 'student',
+      delegatePassStatus: 'VERIFIED',
     });
 
     const user2 = await User.create({
@@ -58,7 +67,8 @@ const seedDB = async () => {
       password: userPassword,
       college: 'Great Barrier Reef School',
       phone: '9876543212',
-      role: 'user',
+      role: 'student',
+      delegatePassStatus: 'PENDING',
     });
 
     const user3 = await User.create({
@@ -68,10 +78,11 @@ const seedDB = async () => {
       password: userPassword,
       college: 'Atlantis University of Arts',
       phone: '9876543213',
-      role: 'user',
+      role: 'student',
+      delegatePassStatus: 'NONE',
     });
 
-    console.log('Seeded Users: 1 Admin, 3 Regular.');
+    console.log('Seeded Users: 1 Admin, 3 Students.');
 
     // 2. Seed 25 Events (Date: June 24, 2026 at 1:00 PM)
     const events = await Event.insertMany([
@@ -415,40 +426,44 @@ const seedDB = async () => {
 
     console.log('Seeded 5 Sponsors across tiers.');
 
-    // 4. Seed Registrations
-    const reg1 = new Registration({
+    // 4. Seed Delegate Passes
+    const pass1 = await DelegatePass.create({
       user: user1._id,
-      name: user1.name,
-      email: user1.email,
-      phone: user1.phone,
-      college: user1.college,
-      city: 'Tortuga',
-      eventsSelected: [events[0]._id, events[1]._id],
-      registrationId: 'HLX-0001',
-      paymentStatus: 'paid',
+      registrationId: 'FEST26-0001',
+      paymentStatus: 'VERIFIED',
+      paymentMethod: 'UPI',
+      utr: '111122223333',
+      paymentScreenshot: 'https://images.unsplash.com/photo-1579621970795-87facc2f976d?auto=format&fit=crop&w=800&q=80',
+      qrToken: 'seed_qr_token_jack_sparrow_777',
+      verifiedBy: adminUser._id,
+      verifiedAt: new Date(),
     });
-    await reg1.save();
 
-    const reg2 = new Registration({
+    const pass2 = await DelegatePass.create({
       user: user2._id,
-      name: user2.name,
-      email: user2.email,
-      phone: user2.phone,
-      college: user2.college,
-      city: 'Sydney Harbour',
-      eventsSelected: [events[1]._id, events[5]._id],
-      registrationId: 'HLX-0002',
-      paymentStatus: 'pending',
+      paymentStatus: 'PENDING',
+      paymentMethod: 'UPI',
+      utr: '444455556666',
+      paymentScreenshot: 'https://images.unsplash.com/photo-1579621970795-87facc2f976d?auto=format&fit=crop&w=800&q=80',
     });
-    await reg2.save();
+
+    console.log('Seeded 2 Delegate Passes.');
+
+    // 5. Seed Event Registrations
+    await EventRegistration.create([
+      { user: user1._id, event: events[0]._id },
+      { user: user1._id, event: events[1]._id },
+      { user: user2._id, event: events[1]._id },
+      { user: user2._id, event: events[5]._id },
+    ]);
 
     // Update user registered events lists
     await User.findByIdAndUpdate(user1._id, { $set: { registeredEvents: [events[0]._id, events[1]._id] } });
     await User.findByIdAndUpdate(user2._id, { $set: { registeredEvents: [events[1]._id, events[5]._id] } });
 
-    console.log('Seeded 2 Registrations (HLX-0001, HLX-0002).');
+    console.log('Seeded Event Registrations.');
 
-    // 5. Seed 2 Notifications
+    // 6. Seed 2 Notifications
     await Notification.create({
       title: 'Voyage Schedule Alert',
       message: 'The Kraken Quiz coordinates have changed to The Coral Reef Hall on Sept 13 at 14:00.',

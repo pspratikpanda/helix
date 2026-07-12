@@ -1,227 +1,252 @@
-const crypto = require('crypto');
-const Razorpay = require('razorpay');
-const Registration = require('../models/Registration');
+const DelegatePass = require('../models/DelegatePass');
+const EventRegistration = require('../models/EventRegistration');
 const Event = require('../models/Event');
 const User = require('../models/User');
 
-// Helper to initialize Razorpay
-const getRazorpayInstance = () => {
-  const keyId = process.env.RAZORPAY_KEY_ID || 'rzp_test_placeholder';
-  const keySecret = process.env.RAZORPAY_KEY_SECRET || 'placeholder_secret';
-  
-  if (keyId === 'rzp_test_placeholder') {
-    return null;
+// ==========================================
+// In-Memory Database Fallbacks (Offline Mode)
+// ==========================================
+let fallbackPasses = [
+  {
+    _id: 'mock-pass-1',
+    user: 'fallback-jack-id',
+    registrationId: 'FEST26-0001',
+    paymentStatus: 'VERIFIED',
+    paymentMethod: 'UPI',
+    utr: 'seed_utr_1',
+    verifiedAt: new Date(),
+    createdAt: new Date(),
   }
-  
-  return new Razorpay({
-    key_id: keyId,
-    key_secret: keySecret,
-  });
+];
+
+let fallbackEventRegistrations = [
+  {
+    _id: 'mock-reg-1',
+    user: 'fallback-jack-id',
+    event: 'mock-evt-1',
+    registeredAt: new Date(),
+  },
+  {
+    _id: 'mock-reg-2',
+    user: 'fallback-jack-id',
+    event: 'mock-evt-2',
+    registeredAt: new Date(),
+  }
+];
+
+// Helper to get fallback event list
+const getFallbackEvents = () => {
+  try {
+    const { fallbackEvents } = require('./event.controller');
+    if (fallbackEvents && fallbackEvents.length > 0) {
+      return fallbackEvents;
+    }
+  } catch (e) {
+    // ignore
+  }
+  return [
+    { _id: 'mock-evt-1', title: 'Deep Dive Debate', category: 'literary', date: new Date(), venue: 'Neptune Auditorium' },
+    { _id: 'mock-evt-2', title: 'The Kraken Quiz', category: 'literary', date: new Date(), venue: 'The Coral Reef Hall' },
+    { _id: 'mock-evt-3', title: 'Sirens of Song', category: 'cultural', date: new Date(), venue: 'The Siren Deck' },
+    { _id: 'mock-evt-4', title: "Poseidon's Arena", category: 'sports', date: new Date(), venue: 'Sports Complex' },
+    { _id: 'mock-evt-5', title: 'Anchors Aweigh Art', category: 'arts', date: new Date(), venue: 'The Art Bay' },
+    { _id: 'mock-evt-6', title: 'The Helm Hackathon', category: 'technical', date: new Date(), venue: 'IT Lab' },
+    { _id: 'mock-evt-7', title: 'Tide Turners Dance', category: 'cultural', date: new Date(), venue: 'Amphitheatre' },
+    { _id: 'mock-evt-8', title: 'Voyage of Verse', category: 'literary', date: new Date(), venue: 'Captain Cabin' }
+  ];
 };
 
-// @desc    Create a Razorpay order
-// @route   POST /api/register/order
+// @desc    Register for events (Free for Verified Delegate Pass Holders)
+// @route   POST /api/register
 // @access  Private
-const createOrder = async (req, res, next) => {
+const createRegistration = async (req, res, next) => {
   try {
     const { eventsSelected } = req.body;
+    const userId = req.user._id;
 
     if (!eventsSelected || eventsSelected.length === 0) {
       return res.status(400).json({ success: false, message: 'Please select at least one event' });
     }
 
-    let totalAmount = 0;
-    
-    // Validate capacity and calculate total amount
-    for (const eventId of eventsSelected) {
-      const event = await Event.findById(eventId);
-      if (!event) {
-        return res.status(404).json({ success: false, message: `Event not found for ID: ${eventId}` });
-      }
-
-      // Check maxParticipants limit
-      if (event.maxParticipants) {
-        const currentRegistrants = await Registration.countDocuments({
-          eventsSelected: eventId,
-        });
-
-        if (currentRegistrants >= event.maxParticipants) {
-          return res.status(400).json({
-            success: false,
-            message: `Selected event "${event.title}" is already fully booked! Capacity is ${event.maxParticipants}.`,
-          });
+    // 1. Verify User has verified Delegate Pass
+    let isVerified = req.user.delegatePassStatus === 'VERIFIED';
+    if (!isVerified) {
+      try {
+        const dbUser = await User.findById(userId);
+        if (dbUser && dbUser.delegatePassStatus === 'VERIFIED') {
+          isVerified = true;
+        }
+      } catch (dbErr) {
+        // DB offline fallback pass status check
+        const pass = fallbackPasses.find((p) => p.user === userId.toString());
+        if (pass && pass.paymentStatus === 'VERIFIED') {
+          isVerified = true;
         }
       }
-      
-      totalAmount += event.registrationFee || 0;
     }
 
-    // If total amount is 0, no payment order needs to be created
-    if (totalAmount === 0) {
-      return res.json({
-        success: true,
-        amount: 0,
-        free: true,
+    if (!isVerified) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please purchase and verify your Delegate Pass first.',
       });
     }
 
-    const razorpayInstance = getRazorpayInstance();
+    // 2. Validate eventsSelected for capacity & duplicates
+    const registeredEventIds = [];
+    const duplicatedEvents = [];
+    const fullyBookedEvents = [];
 
-    if (!razorpayInstance) {
-      // Simulation/Sandbox mode
-      console.log('Razorpay placeholder keys detected. Simulating order creation.');
-      const mockOrderId = `order_mock_${Math.random().toString(36).substring(2, 11)}`;
-      return res.json({
-        success: true,
-        orderId: mockOrderId,
-        amount: totalAmount * 100, // in paisa
-        currency: 'INR',
-        mock: true,
-      });
-    }
-
-    // Real Razorpay order creation
-    const options = {
-      amount: totalAmount * 100, // amount in paisa
-      currency: 'INR',
-      receipt: `receipt_${Date.now()}`,
-    };
-
-    const order = await razorpayInstance.orders.create(options);
-    
-    res.json({
-      success: true,
-      orderId: order.id,
-      amount: order.amount,
-      currency: order.currency,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// @desc    Submit new registration manifest (verifying payment if paid)
-// @route   POST /api/register
-// @access  Private (Protected, restricted to 5 attempts/min via limiter)
-const createRegistration = async (req, res, next) => {
-  try {
-    const { name, email, phone, college, city, eventsSelected } = req.body;
-    const userId = req.user._id;
-
-    if (!name || !email || !phone || !college || !city || !eventsSelected || eventsSelected.length === 0) {
-      return res.status(400).json({ success: false, message: 'Please provide all details and select at least one event' });
-    }
-
-    let totalAmount = 0;
-
-    // Validate capacity and calculate total amount
     for (const eventId of eventsSelected) {
-      const event = await Event.findById(eventId);
-      if (!event) {
-        return res.status(404).json({ success: false, message: `Event not found for ID: ${eventId}` });
-      }
+      let isDuplicate = false;
+      let isFullyBooked = false;
+      let eventTitle = eventId;
 
-      // Check maxParticipants limit
-      if (event.maxParticipants) {
-        const currentRegistrants = await Registration.countDocuments({
-          eventsSelected: eventId,
-        });
+      try {
+        const event = await Event.findById(eventId);
+        if (event) {
+          eventTitle = event.title;
+          // Duplicate check
+          const alreadyReg = await EventRegistration.findOne({ user: userId, event: eventId });
+          if (alreadyReg) {
+            isDuplicate = true;
+          }
 
-        if (currentRegistrants >= event.maxParticipants) {
-          return res.status(400).json({
-            success: false,
-            message: `Selected event "${event.title}" is already fully booked! Capacity is ${event.maxParticipants}.`,
-          });
+          // Capacity check
+          if (event.maxParticipants) {
+            const currentRegistrants = await EventRegistration.countDocuments({ event: eventId });
+            if (currentRegistrants >= event.maxParticipants) {
+              isFullyBooked = true;
+            }
+          }
+        }
+      } catch (dbErr) {
+        // DB offline fallback validation
+        const fallbackEventsList = getFallbackEvents();
+        const event = fallbackEventsList.find((e) => e._id === eventId);
+        if (event) {
+          eventTitle = event.title;
+          const alreadyReg = fallbackEventRegistrations.some(
+            (r) => r.user === userId.toString() && r.event === eventId
+          );
+          if (alreadyReg) {
+            isDuplicate = true;
+          }
+
+          if (event.maxParticipants) {
+            const currentCount = fallbackEventRegistrations.filter((r) => r.event === eventId).length;
+            if (currentCount >= event.maxParticipants) {
+              isFullyBooked = true;
+            }
+          }
         }
       }
-      totalAmount += event.registrationFee || 0;
-    }
 
-    // Verify payment details if the events are not free
-    if (totalAmount > 0) {
-      const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = req.body;
-
-      if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature) {
-        return res.status(400).json({
-          success: false,
-          message: 'Payment verification details (payment ID, order ID, and signature) are required for paid events',
-        });
-      }
-
-      const isMockOrder = razorpay_order_id.startsWith('order_mock_');
-      const isPlaceholderKey = (process.env.RAZORPAY_KEY_ID || 'rzp_test_placeholder') === 'rzp_test_placeholder';
-
-      if (isMockOrder || isPlaceholderKey) {
-        console.log('Simulated payment verification successful.');
+      if (isDuplicate) {
+        duplicatedEvents.push(eventTitle);
+      } else if (isFullyBooked) {
+        fullyBookedEvents.push(eventTitle);
       } else {
-        // Real signature verification
-        const keySecret = process.env.RAZORPAY_KEY_SECRET;
-        const generated_signature = crypto
-          .createHmac('sha256', keySecret)
-          .update(razorpay_order_id + '|' + razorpay_payment_id)
-          .digest('hex');
-
-        if (generated_signature !== razorpay_signature) {
-          return res.status(400).json({
-            success: false,
-            message: 'Razorpay payment signature verification failed',
-          });
-        }
+        registeredEventIds.push(eventId);
       }
     }
 
-    // Submit registration
-    const registration = new Registration({
-      user: userId,
-      name,
-      email,
-      phone,
-      college,
-      city,
-      eventsSelected,
-      paymentStatus: 'paid', // Verified or free, so we mark it as paid
-    });
+    if (duplicatedEvents.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `You are already registered for: ${duplicatedEvents.join(', ')}`,
+      });
+    }
 
-    await registration.save();
+    if (fullyBookedEvents.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `The following events are fully booked: ${fullyBookedEvents.join(', ')}`,
+      });
+    }
+
+    // 3. Register for events
+    for (const eventId of registeredEventIds) {
+      try {
+        await EventRegistration.create({
+          user: userId,
+          event: eventId,
+        });
+      } catch (dbErr) {
+        // DB offline fallback save
+        fallbackEventRegistrations.push({
+          _id: `mock-reg-${Date.now()}-${Math.random()}`,
+          user: userId.toString(),
+          event: eventId,
+          registeredAt: new Date(),
+        });
+      }
+    }
 
     // Associate registered events to user model
-    await User.findByIdAndUpdate(userId, {
-      $addToSet: { registeredEvents: { $each: eventsSelected } },
-    });
+    try {
+      await User.findByIdAndUpdate(userId, {
+        $addToSet: { registeredEvents: { $each: registeredEventIds } },
+      });
+    } catch (dbErr) {
+      // ignore
+    }
+
+    // Fetch details of final registered events to return
+    let populatedEvents = [];
+    try {
+      populatedEvents = await Event.find({ _id: { $in: eventsSelected } });
+    } catch (dbErr) {
+      const fallbackEventsList = getFallbackEvents();
+      populatedEvents = fallbackEventsList.filter((e) => eventsSelected.includes(e._id));
+    }
 
     res.status(201).json({
       success: true,
-      data: registration,
+      message: 'Successfully registered for events!',
+      data: populatedEvents,
     });
   } catch (error) {
     next(error);
   }
 };
 
-// @desc    Get current user's registrations
+// @desc    Get current student's registered events list
 // @route   GET /api/register/my
 // @access  Private
 const getMyRegistrations = async (req, res, next) => {
   try {
-    const registrations = await Registration.find({ user: req.user._id })
-      .populate('eventsSelected');
-    
+    const eventRegs = await EventRegistration.find({ user: req.user._id }).populate('event');
+    const populatedEvents = eventRegs.map((reg) => reg.event).filter(Boolean);
+
     res.json({
       success: true,
-      data: registrations,
+      data: populatedEvents,
     });
-  } catch (error) {
-    console.warn('Serving mock registrations because database is offline');
+  } catch (dbError) {
+    console.warn('Serving mock registered events because database is offline');
+    const myRegs = fallbackEventRegistrations.filter((r) => r.user === req.user._id.toString());
+    const fallbackEventsList = getFallbackEvents();
+    const populatedEvents = myRegs
+      .map((r) => fallbackEventsList.find((e) => e._id === r.event))
+      .filter(Boolean);
+
     res.json({
       success: true,
-      data: [],
+      data: populatedEvents,
     });
   }
+};
+
+// Placeholder createOrder for backwards compatibility in code symbols if checked elsewhere
+const createOrder = async (req, res) => {
+  res.status(410).json({ success: false, message: 'Razorpay order API is deprecated. Payments are verified manually.' });
 };
 
 module.exports = {
   createRegistration,
   getMyRegistrations,
   createOrder,
+  fallbackPasses,
+  fallbackEventRegistrations,
 };
-

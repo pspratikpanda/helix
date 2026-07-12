@@ -11,7 +11,7 @@ const useNotifications = () => {
   useEffect(() => {
     if (!token) return;
 
-    const socketUrl = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3001';
+    const socketUrl = import.meta.env.VITE_SOCKET_URL || 'http://127.0.0.1:3001';
     
     // Connect to Socket.io server passing token in handshake
     const socket = io(socketUrl, {

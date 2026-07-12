@@ -25,6 +25,7 @@ import Contact from './pages/Contact';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
+import QRScanner from './pages/QRScanner';
 
 // Catch-All 404
 import { Compass, ShieldAlert } from 'lucide-react';
@@ -121,6 +122,14 @@ const AppContent = () => {
             element={
               <PrivateRoute>
                 <Dashboard />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/admin/check-in"
+            element={
+              <PrivateRoute>
+                <QRScanner />
               </PrivateRoute>
             }
           />

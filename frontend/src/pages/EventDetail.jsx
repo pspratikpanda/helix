@@ -228,9 +228,9 @@ const EventDetail = () => {
                 <div className="flex items-start gap-3">
                   <CircleDollarSign className="w-5 h-5 text-gold flex-shrink-0" />
                   <div>
-                    <span className="text-[10px] uppercase text-seafoam font-semibold block">Voyage Fee</span>
+                    <span className="text-[10px] uppercase text-seafoam font-semibold block">Entry Fee</span>
                     <span className="text-white mt-0.5 block font-bold text-sm">
-                      {event.registrationFee > 0 ? `₹${event.registrationFee}` : 'Free Boarding'}
+                      Free with Delegate Pass
                     </span>
                   </div>
                 </div>

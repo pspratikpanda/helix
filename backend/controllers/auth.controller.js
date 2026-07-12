@@ -132,7 +132,7 @@ const login = async (req, res, next) => {
           email: 'jack@blackpearl.com',
           username: 'jack',
           passwordPlain: 'user123',
-          role: 'user',
+          role: 'student',
         }
       ];
 

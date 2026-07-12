@@ -34,7 +34,7 @@ const protect = async (req, res, next) => {
             name: 'Captain Jack Sparrow',
             email: 'jack@blackpearl.com',
             username: 'jack',
-            role: 'user',
+            role: 'student',
           };
         }
       }
