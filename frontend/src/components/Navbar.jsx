@@ -141,7 +141,7 @@ const Navbar = () => {
                   Board the Ship
                 </Link>
                 <Link
-                  to="/register"
+                  to="/signup"
                   className="px-5 py-2 text-sm font-semibold bg-gradient-to-r from-baltic to-bronze text-white rounded shadow-md hover:shadow-lg hover:shadow-baltic/20 transition-all duration-300 min-h-[44px] flex items-center"
                 >
                   Set Sail
@@ -232,7 +232,7 @@ const Navbar = () => {
                     Board the Ship
                   </Link>
                   <Link
-                    to="/register"
+                    to="/signup"
                     onClick={() => setIsMobileOpen(false)}
                     className="flex items-center justify-center w-full py-3 bg-gradient-to-r from-baltic to-bronze text-white rounded text-sm font-semibold min-h-[48px] transition-all duration-300"
                   >
